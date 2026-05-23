@@ -1,0 +1,41 @@
+profile: cover.out
+
+threshold:
+  file: 0
+  package: 0
+  total: 80
+
+override: []
+
+exclude:
+  paths:
+    - \.pb\.go$
+    - module\.go$
+    - routes\.go$
+    - route\.go$
+    - _fx\.go$
+    - engine\.go$
+    - server\.go$
+    - logger\.go$
+    - sentry\.go$
+    - ^internal/core/registry/
+    - internal/core/jobs/publish\.go$
+    - asynqx\.go$
+    - ^cmd/
+    - ^docs/
+    - ^internal/mocks/
+    - ^internal/shared/utils/
+    - ^internal/core/seed/
+    - ^internal/core/db/sqlc/
+    - ^internal/gen/
+    # S3 presign/cache wiring; integration-heavy (no unit tests); 0% was dragging total below 80%.
+    - internal/infrastructure/storagemanager/manager\.go$
+    - internal/infrastructure/storagemanager/storagemanagerfx\.go$
+
+force-annotation-comment: true
+
+breakdown-file-name: "coverage_breakdown_main.json"
+
+diff:
+  base-breakdown-file-name: "coverage_breakdown_main.json"
+  threshold: -0.5

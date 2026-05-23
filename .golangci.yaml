@@ -1,0 +1,79 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - revive
+    - errcheck
+    - ineffassign
+    - unused
+    - nolintlint
+    - misspell
+
+  disable:
+    - dupl
+    - gocognit
+    - funlen
+    - gocyclo
+    - goconst
+    - nestif
+    - lll
+    - wrapcheck
+
+  exclusions:
+    generated: strict
+    paths:
+      - ^vendor/
+      - ^generated/
+      - ^docs/
+      - '.*_mock\.go$'
+      - '.*_swagger\.go$'
+      - ^main\.go$
+    rules:
+      - path: internal/shared/utils/
+        linters:
+          - revive
+        text: "avoid meaningless package names"
+      - path: 'internal/features/email/.*'
+        linters:
+          - revive
+        text: "avoid package names that conflict with Go standard library package names"
+
+  settings:
+    revive:
+      severity: warning
+      rules:
+        - name: var-naming
+        - name: package-comments
+        - name: dot-imports
+        - name: unnecessary-stmt
+        - name: exported
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: if-return
+        - name: error-naming
+        - name: blank-imports
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: import-shadowing
+        - name: range-val-address
+
+    govet:
+      enable:
+        - nilness
+        - reflectvaluecompare
+        - sortslice
+        - unusedwrite
+
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+
+    misspell:
+      locale: US
