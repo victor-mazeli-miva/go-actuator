@@ -1,448 +1,93 @@
-# Go Actuator — Road map Plan
+# Go Actuator — Roadmap
 
 ## Vision
 
-Build a lightweight, idiomatic, extensible actuator package for Go services that provides operational endpoints such as health checks, runtime information, and readiness/liveness probes.
+**go-actuator** is a lightweight, idiomatic operational layer for Go services: health aggregation, Kubernetes probes, and basic runtime insight—without growing into a full observability platform.
 
-The project should prioritize:
+We want teams to wire operational endpoints in minutes, keep the core on `net/http`, and add depth only when real production pain appears. The north star is a small, readable package that feels like standard library ergonomics, not an enterprise framework.
 
-- Simplicity
-- Idiomatic Go
-- Minimal dependencies
-- Excellent developer experience
-- Framework agnostic design
-- Incremental evolution
+### Guiding principles
 
-This is NOT intended to be an enterprise platform initially.
+| Principle | What we optimize for |
+|-----------|----------------------|
+| **Lightweight** | Small API surface; easy to read in one sitting |
+| **Stdlib-first** | Core depends only on `net/http` |
+| **Framework-agnostic** | Chi, Gin, gRPC, and others live in thin `adapters/` |
+| **Operational-first** | Health and runtime before metrics and tracing |
+| **Incremental** | Complexity only when usage justifies it |
+| **Idiomatic Go** | Explicit code, small interfaces, composition over hierarchy |
 
----
+### Non-goals (for now)
 
-# Initial Scope
-
-## Supported Frameworks
-
-Phase 1 support:
-
-- net/http
-- Chi
-- Gin
+We are **not** building an enterprise platform, plugin ecosystem, or distributed health mesh in the early phases. Prometheus, OpenTelemetry, DI containers, and async orchestration stay out of scope until Phase 1 is stable and demand is clear.
 
 ---
 
-# Design Philosophy
+## Phase 1 — Operational foundation
 
-## Core Principles
+**Goal:** Give every Go service a dependable day-one actuator: register checks, expose standard routes, mount on common routers.
 
-| Principle | Description |
-|---|---|
-| Lightweight | Small API surface |
-| Stdlib First | Prefer standard library |
-| Composition | Avoid inheritance-style abstractions |
-| Minimal Interfaces | Small focused interfaces |
-| Framework Agnostic | Core package independent from frameworks |
-| Incremental Growth | Add complexity only when needed |
-| Operational First | Health/runtime before observability |
+### Delivered
 
----
+- **HTTP endpoints:** `/health`, `/ready`, `/live`, `/runtime`
+- **Health model:** small `HealthCheck` interface; aggregated JSON (`UP` / `DOWN`)
+- **Runtime snapshot:** goroutines, heap, GC count, CPU count
+- **Adapters:** `net/http`, Chi, Gin
+- **gRPC:** standard `grpc.health.v1` registration for probes and load balancers
+- **Examples** for each integration path
 
-# Phase 1 Goals
+### Stabilization (in progress)
 
-The first milestone should support:
+- Harden handler behavior (no panics, consistent JSON, correct status codes)
+- Expand integration tests across adapters
+- Polish README and examples so onboarding matches the vision above
 
-| Endpoint | Purpose |
-|---|---|
-| `/health` | Aggregated health checks |
-| `/live` | Kubernetes liveness |
-| `/ready` | Kubernetes readiness |
-| `/runtime` | Go runtime statistics |
+**Done when:** A service can register dependencies, mount the actuator, and get trustworthy health/readiness responses in Kubernetes and local dev—with no surprise dependencies or magic.
 
 ---
 
-# Initial Project Structure
+## Phase 2 — Deeper operations (planned)
 
-```text
-actuator/
-├── actuator.go
-├── health.go
-├── runtime.go
-├── response.go
-├── routes.go
-├── adapters/
-│   ├── chi.go
-│   ├── gin.go
-│   └── nethttp.go
-├── examples/
-│   ├── chi/
-│   ├── gin/
-│   └── nethttp/
-└── go.mod
-```
+**Goal:** Optional, opt-in tooling for teams that outgrow “health + runtime” but still want a thin library.
+
+| Direction | Intent |
+|-----------|--------|
+| **Prometheus metrics** | Expose common process/request counters without owning a metrics stack |
+| **pprof** | Safe, documented hooks for on-demand profiling |
+| **Middleware helpers** | Thin instrumentation wrappers for Chi/Gin/`net/http` |
+| **Request timing / counters** | Lightweight HTTP observability at the edge |
+
+Phase 2 features ship as separate, optional surfaces—never as required core complexity.
 
 ---
 
-# Core Architecture
+## Phase 3 — Advanced observability (exploratory)
 
-## Primary Type
+**Goal:** Explore integrations only if Phase 1–2 stay simple and adoption warrants it.
 
-```go
-type Actuator struct {
-    mux *http.ServeMux
+- OpenTelemetry bridges (traces/metrics) as adapters, not core
+- Richer dependency probes (caches, queues, external APIs)
+- Security-oriented actuator policies (auth on admin routes, IP allowlists)
+- Distributed or federated health views (only if a concrete use case emerges)
 
-    checks []HealthCheck
-}
-```
-
-The actuator acts as:
-
-- route registry
-- health registry
-- operational runtime container
+Each item needs a clear “why now” before design work starts.
 
 ---
 
-# Health System
+## Long-term direction
 
-## Health Check Interface
+Over time, **go-actuator** may grow into a reusable operational utility for cloud-native Go services: the place you mount health, readiness, runtime, and—when you choose—metrics and profiling.
 
-```go
-type HealthCheck interface {
-    Name() string
-    Check(ctx context.Context) error
-}
-```
-
-Keep the interface intentionally small.
-
-Do NOT add:
-- metadata
-- priorities
-- generics
-- async pipelines
-- plugin hooks
-
-in the first implementation.
+That growth must stay **organic**: same readability, same stdlib-first core, same refusal to become a framework people fight against.
 
 ---
 
-# Health Aggregation Flow
+## How to influence the roadmap
 
-```text
-HTTP Request
-    ↓
-Execute health checks
-    ↓
-Collect errors
-    ↓
-Aggregate status
-    ↓
-Return JSON response
-```
+Open an issue or discussion with:
 
----
+- What you run in production (K8s, mesh, gRPC-only, etc.)
+- What hurt without this library
+- What you explicitly do **not** want us to build
 
-# Health Response
-
-## Successful Response
-
-```json
-{
-  "status": "UP",
-  "checks": {
-    "postgres": "UP",
-    "redis": "UP"
-  }
-}
-```
-
-## Failure Response
-
-```json
-{
-  "status": "DOWN",
-  "checks": {
-    "postgres": "DOWN"
-  }
-}
-```
-
----
-
-# Runtime Endpoint
-
-## Responsibilities
-
-Expose lightweight runtime information using the Go runtime package.
-
-## Initial Runtime Metrics
-
-| Metric | Source |
-|---|---|
-| Goroutines | runtime.NumGoroutine |
-| Heap Alloc | runtime.MemStats |
-| GC Count | runtime.MemStats |
-| CPU Count | runtime.NumCPU |
-
----
-
-# Routing Strategy
-
-The core package should rely ONLY on:
-
-```go
-net/http
-```
-
-Framework adapters should only map framework routers to the actuator handler.
-
----
-
-# net/http Integration
-
-## Example
-
-```go
-act := actuator.New()
-
-http.ListenAndServe(":8080", act.Router())
-```
-
----
-
-# Chi Integration
-
-## Example
-
-```go
-r := chi.NewRouter()
-
-act := actuator.New()
-
-r.Mount("/actuator", act.Router())
-```
-
----
-
-# Gin Integration
-
-## Example
-
-```go
-r := gin.Default()
-
-act := actuator.New()
-
-r.Any("/actuator/*path", gin.WrapH(act.Router()))
-```
-
----
-
-# Initial API Design
-
-## Constructor
-
-```go
-func New() *Actuator
-```
-
----
-
-## Register Health Check
-
-```go
-func (a *Actuator) RegisterHealthCheck(h HealthCheck)
-```
-
----
-
-## Router Exposure
-
-```go
-func (a *Actuator) Router() http.Handler
-```
-
----
-
-# Internal Route Design
-
-## Routes
-
-| Route | Method |
-|---|---|
-| `/health` | GET |
-| `/live` | GET |
-| `/ready` | GET |
-| `/runtime` | GET |
-
----
-
-# Error Handling Rules
-
-## Principles
-
-- Never panic inside handlers
-- Always return JSON
-- Avoid leaking internal errors
-- Use proper HTTP status codes
-
----
-
-# JSON Response Rules
-
-All responses should:
-
-- use `application/json`
-- include consistent structure
-- avoid unnecessary nesting
-
----
-
-# Concurrency Rules
-
-## Health Checks
-
-Initial implementation may execute checks sequentially.
-
-Only introduce concurrency later if needed.
-
-Avoid premature optimization.
-
----
-
-# Dependency Rules
-
-## Initial Dependencies
-
-Allowed:
-
-- stdlib
-- chi
-- gin
-
-Avoid:
-- config frameworks
-- DI frameworks
-- observability frameworks
-- reflection-heavy packages
-
----
-
-# What NOT To Build Yet
-
-Avoid implementing:
-
-- Prometheus
-- OpenTelemetry
-- plugin systems
-- module registries
-- distributed aggregation
-- dependency injection containers
-- middleware pipelines
-- advanced security layers
-- async schedulers
-
-These belong in later stages.
-
----
-
-# Phase 2 (Future)
-
-Only after Phase 1 stabilizes.
-
-## Planned Features
-
-- Prometheus metrics
-- Middleware instrumentation
-- pprof support
-- Request timing
-- Request counters
-- Framework middleware helpers
-
----
-
-# Phase 3 (Future)
-
-## Potential Features
-
-- OpenTelemetry
-- Plugin architecture
-- Dependency probes
-- Security policies
-- Distributed health aggregation
-
----
-
-# Testing Strategy
-
-## Unit Tests
-
-- health aggregation
-- response serialization
-- runtime collection
-
-## Integration Tests
-
-- chi mounting
-- gin integration
-- net/http integration
-
----
-
-# Success Criteria
-
-Phase 1 is successful when:
-
-- health checks register correctly
-- endpoints return valid JSON
-- chi integration works
-- gin integration works
-- net/http integration works
-- runtime metrics are exposed
-- the package remains lightweight and readable
-
----
-
-# Initial Milestone
-
-The following should work cleanly:
-
-```go
-db := sql.Open(...)
-
-act := actuator.New()
-
-act.RegisterHealthCheck(
-    postgres.New(db),
-)
-
-r := chi.NewRouter()
-
-r.Mount("/actuator", act.Router())
-
-http.ListenAndServe(":8080", r)
-```
-
-Then:
-
-```bash
-curl localhost:8080/actuator/health
-```
-
-Returns:
-
-```json
-{
-  "status": "UP"
-}
-```
-
----
-
-# Long-Term Goal
-
-The actuator should evolve organically into:
-
-- a reusable operational layer
-- a lightweight observability runtime
-- a cloud-native service utility
-
-without sacrificing simplicity or idiomatic Go design.
+We add phases from real usage, not hypothetical enterprise requirements.
