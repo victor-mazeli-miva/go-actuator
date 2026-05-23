@@ -1,4 +1,4 @@
-module github.com/uLesson-Education/go-actuator
+module github.com/victor-mazeli-miva/go-actuator
 
 go 1.25.5
 

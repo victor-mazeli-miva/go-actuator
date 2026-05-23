@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gin-gonic/gin"
-	"github.com/uLesson-Education/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator"
 )
 
 type healthResponse struct {

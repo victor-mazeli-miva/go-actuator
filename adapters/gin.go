@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/uLesson-Education/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator"
 )
 
 // MountGin registers actuator routes on a Gin engine at the given prefix.

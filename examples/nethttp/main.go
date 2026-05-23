@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/uLesson-Education/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator"
 )
 
 type demoCheck struct {

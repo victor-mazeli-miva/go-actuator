@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/uLesson-Education/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator"
 )
 
 // Mount registers actuator routes on a ServeMux at the given prefix.

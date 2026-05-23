@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/uLesson-Education/go-actuator"
-	"github.com/uLesson-Education/go-actuator/adapters"
+	"github.com/victor-mazeli-miva/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator/adapters"
 )
 
 type demoCheck struct {

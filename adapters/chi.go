@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/uLesson-Education/go-actuator"
+	"github.com/victor-mazeli-miva/go-actuator"
 )
 
 // MountChi registers actuator routes on a chi router at the given prefix.
