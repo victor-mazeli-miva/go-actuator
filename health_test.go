@@ -18,6 +18,19 @@ func (s stubCheck) Name() string { return s.name }
 
 func (s stubCheck) Check(_ context.Context) error { return s.err }
 
+func TestEvaluateHealth(t *testing.T) {
+	act := New()
+	act.RegisterHealthCheck(stubCheck{name: "postgres"})
+
+	resp := act.EvaluateHealth(context.Background())
+	if !resp.IsHealthy() {
+		t.Fatalf("status = %q, want UP", resp.Status)
+	}
+	if resp.Checks["postgres"] != statusUP {
+		t.Fatalf("postgres = %q, want UP", resp.Checks["postgres"])
+	}
+}
+
 func TestHealthNoChecks(t *testing.T) {
 	act := New()
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)

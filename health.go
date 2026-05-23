@@ -10,6 +10,11 @@ type HealthCheck interface {
 	Check(ctx context.Context) error
 }
 
+// EvaluateHealth runs all registered health checks and returns the aggregated result.
+func (a *Actuator) EvaluateHealth(ctx context.Context) HealthResponse {
+	return a.aggregateChecks(ctx)
+}
+
 func (a *Actuator) aggregateChecks(ctx context.Context) HealthResponse {
 	if len(a.checks) == 0 {
 		return HealthResponse{Status: statusUP}

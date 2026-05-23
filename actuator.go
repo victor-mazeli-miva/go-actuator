@@ -2,7 +2,7 @@
 // including health checks, Kubernetes liveness/readiness probes, and runtime statistics.
 //
 // Use New to create an Actuator, register HealthCheck implementations, and expose
-// Router as an http.Handler. Framework integrations live in the adapters subpackage.
+// Router as an http.Handler. Framework and gRPC integrations live under adapters/.
 package actuator
 
 import "net/http"

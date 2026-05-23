@@ -15,6 +15,16 @@ type HealthResponse struct {
 	Checks map[string]string `json:"checks,omitempty"`
 }
 
+// IsHealthy reports whether the aggregated status is UP.
+func (r HealthResponse) IsHealthy() bool {
+	return r.Status == statusUP
+}
+
+// CheckIsHealthy reports whether an individual check status is UP.
+func CheckIsHealthy(status string) bool {
+	return status == statusUP
+}
+
 type errorResponse struct {
 	Status string `json:"status"`
 	Error  string `json:"error"`
